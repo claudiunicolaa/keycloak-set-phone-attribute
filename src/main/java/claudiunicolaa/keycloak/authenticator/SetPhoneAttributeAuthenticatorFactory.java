@@ -16,7 +16,7 @@ import java.util.List;
 public class SetPhoneAttributeAuthenticatorFactory implements AuthenticatorFactory {
 	@Override
 	public String getId() {
-		return "update-phone-authenticator";
+		return "set-phone-attribute-authenticator";
 	}
 
 	@Override
@@ -26,7 +26,7 @@ public class SetPhoneAttributeAuthenticatorFactory implements AuthenticatorFacto
 
 	@Override
 	public String getDisplayType() {
-		return "Update Phone";
+		return "Set Phone Attribute";
 	}
 
 	@Override
