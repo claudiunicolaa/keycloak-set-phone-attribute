@@ -1,5 +1,6 @@
 package claudiunicolaa.keycloak.authenticator;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
@@ -13,9 +14,27 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.FormMessage;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.util.JsonSerialization;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
+
+@JsonIgnoreProperties(value = {"required"})
+class TwoFactorAuthAttribute {
+	String type;
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public boolean isSmsType() {
+		return type.equals("sms");
+	}
+
+	public boolean isAppType() {
+		return type.equals("app");
+	}
+}
 
 /**
  * @author Claudiu Nicola, https://claudiunicola.xyz, @claudiunicolaa
@@ -27,16 +46,28 @@ public class SetPhoneAttributeAuthenticator implements Authenticator {
 	@Override
 	public void authenticate(AuthenticationFlowContext context) {
 		UserModel user = context.getUser();
-		// show form only if user has not the phone attribute set
-		if (user.getFirstAttribute("phone") == null) {
-			context.challenge(
-				context.form()
-					.setAttribute("realm", context.getRealm())
-					.createForm(TPL_CODE)
-			);
+		String twoFactorAuthAttr = user.getFirstAttribute("two_factor_auth");
+		// skip if the attribute doesn't exist
+		if (twoFactorAuthAttr == null) {
+			context.success();
 			return;
 		}
-		context.success();
+
+		try {
+			TwoFactorAuthAttribute twoFactorAuth = JsonSerialization.readValue(twoFactorAuthAttr, TwoFactorAuthAttribute.class);
+			// show form only if the two-factor auth is via SMS and the user has not the phone attribute set
+			if (twoFactorAuth.isSmsType() && user.getFirstAttribute("phone") == null) {
+				context.challenge(
+					context.form()
+						.setAttribute("realm", context.getRealm())
+						.createForm(TPL_CODE)
+				);
+				return;
+			}
+			context.success();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
