@@ -41,13 +41,17 @@ public class SetPhoneAttributeAuthenticator implements Authenticator {
 
 	@Override
 	public void action(AuthenticationFlowContext context) {
+		AuthenticationSessionModel authSession = context.getAuthenticationSession();
+
 		EventBuilder event = context.getEvent()
 			.event(EventType.UPDATE_PROFILE)
-			.detail(Details.REASON, "update-phone");
-		AuthenticationSessionModel authSession = context.getAuthenticationSession();
-		EventBuilder errorEvent = event.clone().event(EventType.UPDATE_PROFILE_ERROR)
+			.detail(Details.REASON, "set-phone-attribute");
+		EventBuilder errorEvent = event.clone()
+			.event(EventType.UPDATE_PROFILE_ERROR)
+			.detail(Details.REASON, "set-phone-attribute")
 			.client(authSession.getClient())
 			.user(authSession.getAuthenticatedUser());
+
 		String enteredPhone = context.getHttpRequest().getDecodedFormParameters().getFirst("phone");
 
 		if (enteredPhone == null || !isValidPhone(enteredPhone)) {
