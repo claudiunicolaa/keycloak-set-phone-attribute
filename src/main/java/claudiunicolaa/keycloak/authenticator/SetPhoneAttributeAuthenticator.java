@@ -76,10 +76,10 @@ public class SetPhoneAttributeAuthenticator implements Authenticator {
 
 		EventBuilder event = context.getEvent()
 			.event(EventType.UPDATE_PROFILE)
-			.detail(Details.REASON, "set-phone-attribute");
+			.detail(Details.ACTION, "set-phone-attribute");
 		EventBuilder errorEvent = event.clone()
 			.event(EventType.UPDATE_PROFILE_ERROR)
-			.detail(Details.REASON, "set-phone-attribute")
+			.detail(Details.ACTION, "set-phone-attribute")
 			.client(authSession.getClient())
 			.user(authSession.getAuthenticatedUser());
 
@@ -97,6 +97,10 @@ public class SetPhoneAttributeAuthenticator implements Authenticator {
 
 		context.getUser().setAttribute("phone", Collections.singletonList(enteredPhone));
 		context.success();
+
+		event.user(context.getUser())
+			.detail("phone", enteredPhone)
+			.success();
 	}
 
 	@Override
